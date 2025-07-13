@@ -155,11 +155,15 @@ export default {
     return {
       message: "",
       electronMessage: "",
+      electronApiAvailable: false,
     };
+  },
+  mounted() {
+    this.electronApiAvailable = typeof window !== 'undefined' && !!window.electronAPI;
   },
   methods: {
     sendMessage() {
-      if (window.electronAPI) {
+      if (this.electronApiAvailable) {
         window.electronAPI.sendMessage(this.message);
         this.electronMessage = "Message sent to Electron!";
         this.message = "";
@@ -171,7 +175,7 @@ export default {
       }
     },
     handleFileOpen() {
-      if (window.electronAPI) {
+      if (this.electronApiAvailable) {
         window.electronAPI
           .openFile()
           .then((result) => {

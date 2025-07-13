@@ -98,15 +98,16 @@ app.whenReady().then(async () => {
 
     // Initialize database service (if configured)
     try {
-      await databaseService.init();
+      console.log("ININININI????");
+      // await databaseService.init();
 
-      const tableStatus = await tableService.checkTablesExist();
-      if (!tableStatus.exists) {
-        mainLogger.info("Creating database tables...");
-        await tableService.createTables();
-      }
+      // const tableStatus = await tableService.checkTablesExist();
+      // if (!tableStatus.exists) {
+      //   mainLogger.info("Creating database tables...");
+      //   await tableService.createTables();
+      // }
 
-      mainLogger.info("Database service initialized successfully");
+      // mainLogger.info("Database service initialized successfully");
     } catch (dbError) {
       mainLogger.warn("Database service not configured", {
         error: dbError.message,
@@ -271,9 +272,7 @@ ipcMain.handle("config:setMariaDB", async (event, config) => {
 
 ipcMain.handle("config:testDatabase", async (event, config) => {
   try {
-    // Create temporary database service for testing
-    const testDB =
-      new (require("../src/services/databaseService").constructor)();
+    const testDB = new (require("./services/databaseService").constructor)();
     await testDB.init();
     await testDB.close();
     return { success: true };

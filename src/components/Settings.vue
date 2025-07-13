@@ -17,7 +17,7 @@
     >
       <p>
         Debug: electronAPI =
-        {{ window.electronAPI ? "Available" : "Not Available" }}
+        {{ electronApiAvailable ? "Available" : "Not Available" }}
       </p>
       <p>Debug: isLoading = {{ isLoading }}</p>
       <p>Debug: activeTab = {{ activeTab }}</p>
@@ -100,9 +100,9 @@
           <button
             class="btn btn-secondary"
             @click="testDatabaseConnection"
-            :disabled="!validateMariaDB() || isLoading"
           >
-            {{ isLoading ? "테스트 중..." : "연결 테스트" }}
+          "연결 테스트"
+            <!-- {{ isLoading ? "테스트 중..." : "연결 테스트" }} -->
           </button>
           <button
             class="btn btn-primary"
@@ -224,6 +224,7 @@ export default {
   name: "Settings",
   data() {
     return {
+      electronApiAvailable: false,
       // Form data
       mariaDBConfig: {
         host: "",
@@ -274,73 +275,39 @@ export default {
     };
   },
   async mounted() {
-    console.log("Settings component mounted");
-    console.log("window.electronAPI:", window.electronAPI);
+    this.electronApiAvailable = typeof window !== 'undefined' && !!window.electronAPI;
     await this.loadConfigurations();
   },
   methods: {
     async loadConfigurations() {
+
+      this.isLoading = true;
       try {
-        console.log("Loading configurations...");
-        this.isLoading = true;
 
-        // Load MariaDB config
-        if (window.electronAPI) {
-          console.log("electronAPI available, loading configs...");
-
-          try {
-            const dbConfig = await window.electronAPI.getMariaDBConfig();
-            console.log("MariaDB config loaded:", dbConfig);
-            if (dbConfig) {
-              this.mariaDBConfig = { ...this.mariaDBConfig, ...dbConfig };
-            }
-          } catch (dbError) {
-            console.log("MariaDB config error:", dbError);
-          }
-
-          // Load AWS config
-          try {
-            const awsData = await window.electronAPI.getAWSConfig();
-            console.log("AWS config loaded:", awsData);
-            if (awsData) {
-              this.awsConfig = { ...this.awsConfig, ...awsData };
-            }
-          } catch (awsError) {
-            console.log("AWS config error:", awsError);
-          }
-
-          // Load general config
-          try {
-            const targetFolder = await window.electronAPI.getConfig(
-              "targetFolder"
-            );
-            const logLevel = await window.electronAPI.getConfig("logLevel");
-
-            this.generalConfig.targetFolder = targetFolder || "";
-            this.generalConfig.logLevel = logLevel || "info";
-            console.log("General config loaded:", { targetFolder, logLevel });
-          } catch (generalError) {
-            console.log("General config error:", generalError);
-          }
-        } else {
-          console.log("electronAPI not available");
-          this.showMessage("Electron API를 사용할 수 없습니다.", "error");
+        // Electron 환경 전제: 바로 API 사용
+        const dbConfig = await window.electronAPI.getMariaDBConfig();
+        if (dbConfig) {
+          this.mariaDBConfig = { ...this.mariaDBConfig, ...dbConfig };
         }
+        const awsData = await window.electronAPI.getAWSConfig();
+        if (awsData) {
+          this.awsConfig = { ...this.awsConfig, ...awsData };
+        }
+        const targetFolder = await window.electronAPI.getConfig("targetFolder");
+        const logLevel = await window.electronAPI.getConfig("logLevel");
+        this.generalConfig.targetFolder = targetFolder || "";
+        this.generalConfig.logLevel = logLevel || "info";
       } catch (error) {
-        console.error("Load configurations error:", error);
         this.showMessage("설정을 불러오는 중 오류가 발생했습니다.", "error");
       } finally {
         this.isLoading = false;
       }
     },
     async saveMariaDBConfig() {
+      this.isLoading = true;
       try {
-        this.isLoading = true;
-
-        if (window.electronAPI) {
-          await window.electronAPI.setMariaDBConfig(this.mariaDBConfig);
-          this.showMessage("MariaDB 설정이 저장되었습니다.", "success");
-        }
+        await window.electronAPI.setMariaDBConfig(this.mariaDBConfig);
+        this.showMessage("MariaDB 설정이 저장되었습니다.", "success");
       } catch (error) {
         this.showMessage("MariaDB 설정 저장 중 오류가 발생했습니다.", "error");
       } finally {
@@ -348,13 +315,10 @@ export default {
       }
     },
     async saveAWSConfig() {
+      this.isLoading = true;
       try {
-        this.isLoading = true;
-
-        if (window.electronAPI) {
-          await window.electronAPI.setAWSConfig(this.awsConfig);
-          this.showMessage("AWS 설정이 저장되었습니다.", "success");
-        }
+        await window.electronAPI.setAWSConfig(this.awsConfig);
+        this.showMessage("AWS 설정이 저장되었습니다.", "success");
       } catch (error) {
         this.showMessage("AWS 설정 저장 중 오류가 발생했습니다.", "error");
       } finally {
@@ -362,20 +326,17 @@ export default {
       }
     },
     async saveGeneralConfig() {
+      this.isLoading = true;
       try {
-        this.isLoading = true;
-
-        if (window.electronAPI) {
-          await window.electronAPI.setConfig(
-            "targetFolder",
-            this.generalConfig.targetFolder
-          );
-          await window.electronAPI.setConfig(
-            "logLevel",
-            this.generalConfig.logLevel
-          );
-          this.showMessage("일반 설정이 저장되었습니다.", "success");
-        }
+        await window.electronAPI.setConfig(
+          "targetFolder",
+          this.generalConfig.targetFolder
+        );
+        await window.electronAPI.setConfig(
+          "logLevel",
+          this.generalConfig.logLevel
+        );
+        this.showMessage("일반 설정이 저장되었습니다.", "success");
       } catch (error) {
         this.showMessage("일반 설정 저장 중 오류가 발생했습니다.", "error");
       } finally {
@@ -383,21 +344,22 @@ export default {
       }
     },
     async testDatabaseConnection() {
+      console.log("GO")
+      this.isLoading = true;
       try {
-        this.isLoading = true;
+        console.log(this.mariaDBConfig)
+        const result = await window.electronAPI.testDatabaseConnection(
+          // this.mariaDBConfig
 
-        if (window.electronAPI) {
-          const result = await window.electronAPI.testDatabaseConnection(
-            this.mariaDBConfig
+          {'a':1}
+        );
+        if (result.success) {
+          this.showMessage("데이터베이스 연결 테스트 성공!", "success");
+        } else {
+          this.showMessage(
+            "데이터베이스 연결 실패: " + result.error,
+            "error"
           );
-          if (result.success) {
-            this.showMessage("데이터베이스 연결 테스트 성공!", "success");
-          } else {
-            this.showMessage(
-              "데이터베이스 연결 실패: " + result.error,
-              "error"
-            );
-          }
         }
       } catch (error) {
         this.showMessage("연결 테스트 중 오류가 발생했습니다.", "error");
@@ -407,11 +369,9 @@ export default {
     },
     async selectTargetFolder() {
       try {
-        if (window.electronAPI) {
-          const result = await window.electronAPI.selectFolder();
-          if (result && result.filePaths && result.filePaths.length > 0) {
-            this.generalConfig.targetFolder = result.filePaths[0];
-          }
+        const result = await window.electronAPI.selectFolder();
+        if (result && result.filePaths && result.filePaths.length > 0) {
+          this.generalConfig.targetFolder = result.filePaths[0];
         }
       } catch (error) {
         this.showMessage("폴더 선택 중 오류가 발생했습니다.", "error");

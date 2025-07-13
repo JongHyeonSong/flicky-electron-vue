@@ -14,13 +14,27 @@ class DatabaseService {
   async init() {
     try {
       // Get MariaDB configuration from config service
-      const dbConfig = await configService.getMariaDBConfig();
+      let dbConfig = await configService.getMariaDBConfig();
+
+      console.log("wejfio", dbConfig);
 
       if (!dbConfig) {
-        throw new Error(
-          "MariaDB configuration not found. Please set up database configuration first."
+        // 기본값을 configService에 저장
+        dbConfig = {
+          host: "localhost",
+          port: 3306,
+          database: "video_processing",
+          username: "root",
+          password: "",
+        };
+        await configService.setMariaDBConfig(dbConfig);
+        logger.warn(
+          "MariaDB 설정이 없어 기본값을 configService에 저장하고 사용합니다.",
+          dbConfig
         );
       }
+
+      console.log("11 wejfio", dbConfig);
 
       // Create connection pool
       this.pool = mariadb.createPool({
@@ -35,8 +49,12 @@ class DatabaseService {
         trace: false,
       });
 
+      console.log("1221 wejfio");
+
       // Test connection
       await this.testConnection();
+
+      console.log("3333 wejfio");
 
       logger.info("Database service initialized successfully", {
         host: dbConfig.host,
@@ -44,6 +62,7 @@ class DatabaseService {
         database: dbConfig.database,
       });
     } catch (error) {
+      console.error(error);
       logger.error("Failed to initialize database service", {
         error: error.message,
       });
@@ -53,7 +72,18 @@ class DatabaseService {
 
   async testConnection() {
     try {
-      this.connection = await this.pool.getConnection();
+      console.log("444 wejfio");
+
+      // 5초(5000ms) 타임아웃 내에 커넥션을 얻지 못하면 에러 발생
+      this.connection = await Promise.race([
+        this.pool.getConnection(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("DB 커넥션 타임아웃(5초)")), 5000)
+        ),
+      ]);
+
+      console.log("555 wejfio");
+
       await this.connection.ping();
       this.isConnected = true;
 

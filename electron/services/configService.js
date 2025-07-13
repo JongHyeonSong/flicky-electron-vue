@@ -181,4 +181,4 @@ class ConfigService {
   }
 }
 
-module.exports = ConfigService;
+module.exports = new ConfigService();

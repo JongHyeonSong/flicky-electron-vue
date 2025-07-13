@@ -29,8 +29,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // MariaDB configuration
   getMariaDBConfig: () => ipcRenderer.invoke("config:getMariaDB"),
   setMariaDBConfig: (config) => ipcRenderer.invoke("config:setMariaDB", config),
-  testDatabaseConnection: (config) =>
-    ipcRenderer.invoke("config:testDatabase", config),
+  testDatabaseConnection: (config) => {
+    console.log("WOWOW");
+    ipcRenderer.invoke("config:testDatabase", config);
+  },
 
   // AWS configuration
   getAWSConfig: () => ipcRenderer.invoke("config:getAWS"),
