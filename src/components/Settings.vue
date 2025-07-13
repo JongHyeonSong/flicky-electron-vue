@@ -99,9 +99,9 @@
         <div class="button-group">
           <button
             class="btn btn-secondary"
-            @click="testDatabaseConnection"
+            @click="testDBConnection"
           >
-          "연결 테스트"
+          연결 테스트
             <!-- {{ isLoading ? "테스트 중..." : "연결 테스트" }} -->
           </button>
           <button
@@ -112,6 +112,9 @@
             {{ isLoading ? "저장 중..." : "저장" }}
           </button>
         </div>
+        <div v-if="dbTestStatus === 'connected'" style="color:green;">✅ 연결됨</div>
+        <div v-else-if="dbTestStatus === 'not_connected'" style="color:red;">❌ 연결 실패</div>
+        <div v-if="dbTestMessage">{{ dbTestMessage }}</div>
       </div>
 
       <div v-else-if="activeTab === 'aws'" class="config-section">
@@ -220,6 +223,7 @@
 </template>
 
 <script>
+import { electronBridge } from '../utils/electronBridge';
 export default {
   name: "Settings",
   data() {
@@ -272,6 +276,8 @@ export default {
         { value: "info", label: "정보 이상" },
         { value: "debug", label: "디버그 이상" },
       ],
+      dbTestStatus: null,
+      dbTestMessage: ''
     };
   },
   async mounted() {
@@ -343,26 +349,22 @@ export default {
         this.isLoading = false;
       }
     },
-    async testDatabaseConnection() {
-      console.log("GO")
+    async testDBConnection() {
       this.isLoading = true;
+      this.dbTestStatus = null;
+      this.dbTestMessage = '';
       try {
-        console.log(this.mariaDBConfig)
-        const result = await window.electronAPI.testDatabaseConnection(
-          // this.mariaDBConfig
-
-          {'a':1}
-        );
+        const result = await electronBridge('testDBConnection', this.mariaDBConfig);
         if (result.success) {
-          this.showMessage("데이터베이스 연결 테스트 성공!", "success");
+          this.dbTestStatus = 'connected';
+          this.dbTestMessage = result.message;
         } else {
-          this.showMessage(
-            "데이터베이스 연결 실패: " + result.error,
-            "error"
-          );
+          this.dbTestStatus = 'not_connected';
+          this.dbTestMessage = result.message;
         }
-      } catch (error) {
-        this.showMessage("연결 테스트 중 오류가 발생했습니다.", "error");
+      } catch (e) {
+        this.dbTestStatus = 'not_connected';
+        this.dbTestMessage = '테스트 중 오류 발생';
       } finally {
         this.isLoading = false;
       }

@@ -1,8 +1,13 @@
 <template>
   <main class="main-content">
+    <div v-if="dbStatus" class="db-status-bar" :class="dbStatus.status">
+      <span v-if="dbStatus.status === 'pending'">🔄 {{ dbStatus.message }}</span>
+      <span v-else-if="dbStatus.status === 'connected'">✅ {{ dbStatus.message }}</span>
+      <span v-else-if="dbStatus.status === 'failed'">❌ {{ dbStatus.message }}</span>
+    </div>
     <div v-if="currentPage === 'home'" class="page home-page">
       <div class="welcome-section">
-        <h2>Welcome to Flicky Electron!  wefwe wefwe eee🚀</h2>
+        <h2>Welcome to Flicky Electron! 🚀</h2>
         <p>A modern desktop application built with Vue.js and Electron</p>
       </div>
 
@@ -156,10 +161,17 @@ export default {
       message: "",
       electronMessage: "",
       electronApiAvailable: false,
+      dbStatus: null,
     };
   },
   mounted() {
     this.electronApiAvailable = typeof window !== 'undefined' && !!window.electronAPI;
+    if (this.electronApiAvailable && window.electronAPI.onDBConnectionStatus) {
+      window.electronAPI.onDBConnectionStatus((status) => {
+        console.log("DB status:", status);
+        this.dbStatus = status;
+      });
+    }
   },
   methods: {
     sendMessage() {
@@ -431,5 +443,31 @@ export default {
 
 .links a:hover {
   color: #5a6fd8;
+}
+
+.db-status-bar {
+  padding: 10px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+}
+.db-status-bar.pending {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+.db-status-bar.connected {
+  background: rgba(46, 213, 115, 0.2);
+  color: #2ed573;
+}
+.db-status-bar.failed {
+  background: rgba(255, 71, 87, 0.2);
+  color: #ff4757;
 }
 </style>

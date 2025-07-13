@@ -16,16 +16,16 @@ class DatabaseService {
       // Get MariaDB configuration from config service
       let dbConfig = await configService.getMariaDBConfig();
 
-      console.log("wejfio", dbConfig);
+      console.log("22222222222222", dbConfig);
 
       if (!dbConfig) {
         // 기본값을 configService에 저장
         dbConfig = {
-          host: "localhost",
-          port: 3306,
-          database: "video_processing",
+          host: "211.37.148.144",
+          port: 13306,
+          database: "flicky",
           username: "root",
-          password: "",
+          password: "eoqkr!@34",
         };
         await configService.setMariaDBConfig(dbConfig);
         logger.warn(

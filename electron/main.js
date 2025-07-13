@@ -7,6 +7,7 @@ const {
   screen,
 } = require("electron");
 const path = require("path");
+const mariadb = require("mariadb");
 
 // Import logging system
 const logger = require("./logger");
@@ -22,6 +23,31 @@ const mainLogger = logger.createServiceLogger("MainProcess");
 
 const isDev = !app.isPackaged;
 let mainWindow;
+let dbConnectionStatus = {
+  status: "pending", // 'pending' | 'connected' | 'failed'
+  message: "DB 연결 시도중...",
+};
+
+async function asyncInitDatabaseService() {
+  dbConnectionStatus = { status: "pending", message: "DB 연결 시도중..." };
+  if (mainWindow) {
+    mainWindow.webContents.send("db-connection-status", dbConnectionStatus);
+  }
+  try {
+    await databaseService.init();
+    dbConnectionStatus = { status: "connected", message: "DB 연결 성공" };
+    mainLogger.info("Database connected");
+  } catch (err) {
+    dbConnectionStatus = {
+      status: "failed",
+      message: "DB 연결 실패: " + err.message,
+    };
+    mainLogger.error("Database connection failed", { error: err.message });
+  }
+  if (mainWindow) {
+    mainWindow.webContents.send("db-connection-status", dbConnectionStatus);
+  }
+}
 
 function createWindow() {
   // Get all displays
@@ -77,6 +103,12 @@ function createWindow() {
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();
     mainWindow.maximize(); // This will make it fill the screen properly
+    // 개발 환경이면 DevTools 자동 오픈
+    if (isDev) {
+      mainWindow.webContents.openDevTools();
+    }
+    // 창이 준비되면 현재 DB 상태도 즉시 전송
+    mainWindow.webContents.send("db-connection-status", dbConnectionStatus);
   });
 
   mainWindow.on("closed", () => {
@@ -98,15 +130,12 @@ app.whenReady().then(async () => {
 
     // Initialize database service (if configured)
     try {
-      console.log("ININININI????");
       // await databaseService.init();
-
       // const tableStatus = await tableService.checkTablesExist();
       // if (!tableStatus.exists) {
       //   mainLogger.info("Creating database tables...");
       //   await tableService.createTables();
       // }
-
       // mainLogger.info("Database service initialized successfully");
     } catch (dbError) {
       mainLogger.warn("Database service not configured", {
@@ -120,6 +149,14 @@ app.whenReady().then(async () => {
   }
 
   createWindow();
+  // 창이 준비되면 DB 연결 비동기 시도
+  setTimeout(() => asyncInitDatabaseService(), 1000);
+
+  // DB 연결 테스트 IPC 핸들러 (중복 방지, 반드시 app.whenReady 이후 등록)
+  // ipcMain.handle("test-db-connection", async (event, config) => {
+  //   console.log("test-db-connection called", config);
+  //   return 123;
+  // });
 
   // Menu template
   const template = [
@@ -300,6 +337,33 @@ ipcMain.handle("config:setAWS", async (event, config) => {
   } catch (error) {
     mainLogger.error("Error setting AWS config", { error: error.message });
     throw error;
+  }
+});
+
+ipcMain.handle("testDBConnection", async (event, config) => {
+  mainLogger.info("testDBConnection handle received", { config });
+  const DatabaseService = require("./services/databaseService").constructor;
+  const testDB = new DatabaseService();
+  try {
+    // MariaDB config를 임시로 세팅
+    const mariadb = require("mariadb");
+    testDB.pool = mariadb.createPool({
+      host: config.host,
+      port: config.port || 3306,
+      database: config.database,
+      user: config.username,
+      password: config.password,
+      connectionLimit: 2,
+      acquireTimeout: 5000,
+      timeout: 5000,
+      trace: false,
+    });
+    await testDB.testConnection();
+    await testDB.close();
+    return { success: true, message: "DB 연결 성공" };
+  } catch (error) {
+    mainLogger.error("DB 연결 테스트 실패", { error: error.message });
+    return { success: false, message: error.message };
   }
 });
 
