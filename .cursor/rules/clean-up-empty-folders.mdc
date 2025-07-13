@@ -1,0 +1,13 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Rule: Clean Up Empty/Unused Folders
+
+- When the user requests to remove unused or empty folders, do so immediately and efficiently.
+- Do not require repeated confirmation or multiple prompts from the user.
+- Use the appropriate command for the user's OS and shell to ensure folders are deleted on the first request.
+- After deletion, confirm to the user that the folders are gone.
+- Example folders: `src/config`, `src/utils`, `src/services`, or any other user-specified path.
+- Rationale: Avoid user frustration and keep the workspace clean and focused.

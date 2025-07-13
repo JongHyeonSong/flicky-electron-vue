@@ -1,0 +1,11 @@
+{
+  "watch": ["electron/", "src/services/", "src/utils/"],
+  "ext": "js,json",
+  "ignore": ["node_modules/", "dist/", "dist-electron/", "logs/", "*.log"],
+  "exec": "electron .",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "delay": 1000,
+  "verbose": true
+}

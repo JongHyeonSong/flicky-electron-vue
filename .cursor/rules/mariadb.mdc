@@ -1,0 +1,34 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+211.37.148.144:13306
+id:root
+password:eoqkr!@34
+
+ flicky.vod_encoding definition
+
+CREATE TABLE `vod_encoding` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(100) DEFAULT NULL,
+  `job_id` varchar(100) DEFAULT NULL COMMENT 'mediaconvert 구분 id',
+  `title` varchar(100) DEFAULT NULL,
+  `size` varchar(100) DEFAULT NULL,
+  `duration` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=68 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='https://flicky-output-prd.s3.ap-northeast-2.amazonaws.com/224b40e4-891d-4978-bdb4-791027109e5b/flicky.m3u8';
+
+
+-- flicky.vod_encoding_details definition
+
+CREATE TABLE `vod_encoding_details` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `job_id` varchar(100) DEFAULT NULL,
+  `status` varchar(100) DEFAULT NULL,
+  `percent` varchar(100) DEFAULT NULL,
+  `detail_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`detail_json`)),
+  `reg_dt` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+
+) ENGINE=InnoDB AUTO_INCREMENT=117 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='각인코딩별 로깅';

@@ -1,0 +1,63 @@
+{
+  "name": "flicky-electron-vue",
+  "version": "1.0.0",
+  "description": "A Vue.js + Electron application",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron": "electron .",
+    "electron-dev": "cross-env VITE_PORT=5555 concurrently \"npm run dev\" \"wait-on http://localhost:%VITE_PORT% && electron .\"",
+    "electron-watch": "cross-env VITE_PORT=5555 concurrently \"npm run dev\" \"wait-on http://localhost:%VITE_PORT% && nodemon\"",
+    "electron-pack": "npm run build && electron-builder",
+    "dist": "npm run build && electron-builder --publish=never"
+  },
+  "keywords": [
+    "vue",
+    "electron",
+    "desktop"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "nodemon": "^3.1.10",
+    "vite": "^5.4.19",
+    "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1692.0",
+    "chokidar": "^4.0.3",
+    "electron-store": "^10.1.0",
+    "fluent-ffmpeg": "^2.1.3",
+    "mariadb": "^3.4.4",
+    "sql.js": "^1.10.2",
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5",
+    "winston": "^3.17.0"
+  },
+  "build": {
+    "appId": "com.yourcompany.flicky-electron-vue",
+    "productName": "Flicky Electron Vue",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "dir",
+      "sign": false,
+      "forceCodeSigning": false,
+      "signAndEditExecutable": false
+    },
+    "forceCodeSigning": false
+  }
+}
